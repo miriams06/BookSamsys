@@ -1,6 +1,10 @@
 ﻿using BookSamsys.Models;
 using BookSamsys.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
+using System.Net.Mime;
+using NuGet.LibraryModel;
+using AutoMapper;
 
 namespace BookSamsys.Services;
 
@@ -42,15 +46,27 @@ public class LivroService : ILivroService
         throw new NotImplementedException();
     }
 
-    public async Task GetLivros()
+    public async Task<livro> GetLivros()
     {
         var livro = await _livroRepository.ObterTodos();
+        
+        if (livro == null)
+        {
+            return NotFound();
+        }
+
+        return (livro)livro;
     }
 
 
     public async Task<livro> GetLivro(string isbn)
     {
         var livro = await _livroRepository.ObterPorIsbn(isbn);
+
+        if(isbn.Length != 13)
+        {
+            return NotFound();
+        }
 
         if (livro == null)
         {
@@ -62,15 +78,27 @@ public class LivroService : ILivroService
 
     public async Task<livro> AddLivro(livro livro)
     {
+        if (livro.isbn.Length != 13 || livro.preco < 0 || livro == null)
+        {
+            string errorMessage = "Ocorreu um erro ao adicionar as informações";
+            Console.WriteLine(errorMessage);
+        }
+
         return await _livroRepository.AdicionarLivro(livro);
 
-        
     }
 
 
-    public async Task UpdateLivro(livro isbn)
+    public async Task<livro> UpdateLivro(livro isbn)
     {
         await _livroRepository.AtualizarLivro(isbn);
+
+        if (livro == null)
+        {
+            return NotFound();
+        }
+
+        return livro;
     }
 
     public async Task<livro> DeleteLivro(string isbn, livro livro)
