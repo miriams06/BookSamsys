@@ -1,8 +1,15 @@
 ﻿using BookSamsys.Models;
 using BookSamsys.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
+using System.Net.Mime;
+using NuGet.LibraryModel;
+using AutoMapper;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Azure.Messaging;
 
 namespace BookSamsys.Services;
-public class AutorService : IAutorService
+public class AutorService : ControllerBase, IAutorService
 {
     private readonly IAutorRepository _autorRepository;
 
@@ -13,12 +20,26 @@ public class AutorService : IAutorService
 
     public async Task<IEnumerable<autor>> ObterTodosAutores()
     {
-        return await _autorRepository.ObterTodos();
+        var autor = await _autorRepository.ObterTodos();
+
+        if (autor == null)
+        {
+            NotFound();
+        }
+
+        return autor;
     }
 
-    public async Task<autor> ObterAutorPorId(int id)
+    public async Task ObterAutorPorId(int id)
     {
-        return await _autorRepository.ObterPorId(id);
+        var autor = _autorRepository.ObterPorId(id);
+
+        if (autor == null)
+        {
+            NotFound();
+        }
+
+        Ok(autor);
     }
 
     public async Task AdicionarAutor(autor autor)
@@ -26,13 +47,27 @@ public class AutorService : IAutorService
         await _autorRepository.AdicionarAutor(autor);
     }
 
-    public async Task AtualizarAutor(autor autor)
+    public async Task AtualizarAutor(autor id)
     {
-        await _autorRepository.AtualizarAutor(autor);
+        var autor = _autorRepository.AtualizarAutor(id);
+
+        if (autor == null)
+        {
+            NotFound();
+        }
+
+        Ok(autor);
     }
 
     public async Task RemoverAutor(int id)
     {
-        await _autorRepository.RemoverAutor(id);
+        var autor = _autorRepository.RemoverAutor(id);
+
+        if (autor == null)
+        {
+            NotFound();
+        }
+
+        Ok(autor);
     }
 }
