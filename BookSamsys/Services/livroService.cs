@@ -5,10 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 using NuGet.LibraryModel;
 using AutoMapper;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Azure.Messaging;
+using System.Web;
 
 namespace BookSamsys.Services;
 
-public class LivroService : ILivroService
+public class LivroService : ControllerBase, ILivroService
 {
     private readonly ILivroRepository _livroRepository;
 
@@ -16,104 +19,75 @@ public class LivroService : ILivroService
     {
         _livroRepository = livroRepository;
     }
-    public Task<IEnumerable<livro>> ObterTodosLivros()
+
+
+    public async Task<IEnumerable<livro>> ObterTodosLivros()
     {
-        throw new NotImplementedException();
-    }
-
-    public Task ObterLivroPorIsbn(string isbn)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task AdicionarLivro(livro livro)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task AtualizarLivro(livro livro)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task RemoverLivro(string isbn)
-    {
-        throw new NotImplementedException();
-    }
-
-    public livro NotFound()
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<livro> GetLivros()
-    {
-        var livro = await _livroRepository.ObterTodos();
-        
-        if (livro == null)
-        {
-            return NotFound();
-        }
-
-        return (livro)livro;
-    }
-
-
-    public async Task<livro> GetLivro(string isbn)
-    {
-        var livro = await _livroRepository.ObterPorIsbn(isbn);
-
-        if(isbn.Length != 13)
-        {
-            return NotFound();
-        }
+        var livro = _livroRepository.ObterTodos();
 
         if (livro == null)
         {
-            return NotFound();
+            NotFound();
         }
 
-        return livro;
+        return await livro;
     }
 
-    public async Task<livro> AddLivro(livro livro)
+
+    public async Task ObterLivroPorIsbn(string isbn)
+    {
+        var livro = _livroRepository.ObterPorIsbn(isbn);
+
+        if (isbn.Length != 13)
+        {
+            BadRequest(new { message = "O isbn tem de ter 13 caracteres" });
+        }
+
+
+        if (livro == null)
+        {
+            NotFound();
+        }
+
+        Ok(livro);
+    }
+
+
+    public async Task AdicionarLivro(livro livro)
     {
         if (livro.isbn.Length != 13 || livro.preco < 0 || livro == null)
         {
-            string errorMessage = "Ocorreu um erro ao adicionar as informações";
-            Console.WriteLine(errorMessage);
+            BadRequest(new { message = "Ocorreu um erro ao adicionar as informações" });
         }
 
-        return await _livroRepository.AdicionarLivro(livro);
+        await _livroRepository.AdicionarLivro(livro);
 
     }
 
 
-    public async Task<livro> UpdateLivro(livro isbn)
+    public async Task AtualizarLivro(livro isbn)
     {
-        await _livroRepository.AtualizarLivro(isbn);
+        var livro = _livroRepository.AtualizarLivro(isbn);
 
         if (livro == null)
         {
-            return NotFound();
+            NotFound();
         }
 
-        return livro;
+        Ok(livro);
+
     }
 
-    public async Task<livro> DeleteLivro(string isbn, livro livro)
+    public async Task RemoverLivro(string isbn)
     {
-        await _livroRepository.RemoverLivro(isbn);
+        var livro = _livroRepository.RemoverLivro(isbn);
+
         if (livro == null)
         {
-            return NotFound();
+            NotFound();
         }
 
-        return NoContent();
+        Ok(livro);
     }
 
-    public livro NoContent()
-    {
-        throw new NotImplementedException();
-    }
 }
