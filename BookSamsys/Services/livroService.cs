@@ -13,7 +13,7 @@ namespace BookSamsys.Services;
 
 public class LivroService : ControllerBase, ILivroService
 {
-    private readonly ILivroRepository _livroRepository;
+    private readonly AppDBContext _context; ILivroRepository _livroRepository;
 
     public LivroService(ILivroRepository livroRepository)
     {
@@ -23,14 +23,14 @@ public class LivroService : ControllerBase, ILivroService
 
     public async Task<IEnumerable<livro>> ObterTodosLivros()
     {
-        var livro = _livroRepository.ObterTodos();
+        var livros = _livroRepository.ObterTodos();
 
-        if (livro == null)
+        if (livros == null)
         {
-            NotFound();
+            NoContent();
         }
 
-        return await livro;
+        return await livros;
     }
 
 
@@ -38,11 +38,6 @@ public class LivroService : ControllerBase, ILivroService
     {
         var livro = _livroRepository.ObterPorIsbn(isbn);
 
-        if (isbn.Length != 13)
-        {
-            BadRequest(new { message = "O isbn tem de ter 13 caracteres" });
-        }
-
 
         if (livro == null)
         {
@@ -53,41 +48,60 @@ public class LivroService : ControllerBase, ILivroService
     }
 
 
-    public async Task AdicionarLivro(livro livro)
+    public async Task AdicionarLivro(livro addLivro)
     {
-        if (livro.isbn.Length != 13 || livro.preco < 0 || livro == null)
+        var livroTask = _livroRepository.ObterPorIsbn(addLivro.isbn);
+        await livroTask;
+
+        var livro = livroTask.Result;
+
+        if (livro != null && livro.isbn == addLivro.isbn)
+        {
+            BadRequest("O ISBN já está em uso por outro livro.");
+        }
+
+        if (addLivro.isbn.Length != 13 || addLivro.preco < 0 || addLivro == null)
         {
             BadRequest(new { message = "Ocorreu um erro ao adicionar as informações" });
         }
 
-        await _livroRepository.AdicionarLivro(livro);
+
+        _livroRepository.AdicionarLivro(addLivro);
+
+        Ok("Livro inserido com sucesso.");
+
 
     }
 
 
-    public async Task AtualizarLivro(livro isbn)
+    public async Task AtualizarLivro(livro editarLivro)
     {
-        var livro = _livroRepository.AtualizarLivro(isbn);
+        var livro = _livroRepository.ObterPorIsbn(editarLivro.isbn);
 
         if (livro == null)
         {
             NotFound();
         }
 
-        Ok(livro);
+        _livroRepository.AtualizarLivro(editarLivro);
+
+        Ok("Livro atualizado com sucesso.");
 
     }
 
     public async Task RemoverLivro(string isbn)
     {
-        var livro = _livroRepository.RemoverLivro(isbn);
+        var livro = _livroRepository.ObterPorIsbn(isbn);
 
         if (livro == null)
         {
             NotFound();
         }
 
-        Ok(livro);
+        _livroRepository.RemoverLivro(isbn);
+
+        Ok("Livro removido com sucesso.");
+
     }
 
 }
