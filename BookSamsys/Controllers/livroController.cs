@@ -30,30 +30,37 @@ public class LivroController : ControllerBase
 
 
     [HttpGet]
-    [Route("livros/{isbn}")]
-    public async Task GetLivro(string isbn)
+    [Route("livro/{isbn}")]
+    public async Task<ActionResult<livro>>GetLivro(string isbn)
     {
-        await _livroService.ObterLivroPorIsbn(isbn);
+       return await _livroService.ObterLivroPorIsbn(isbn);
     }
+
+    //[HttpGet]
+    //[Route("livros/{ordenacao}")]
+    //public async Task GetLivro(string ordenacao, int paginaAtual, int itensPorPagina)
+    //{
+    //    await _livroService.ListarLivros(ordenacao, paginaAtual, itensPorPagina);
+    //}
 
     [HttpPost]
     [Route("criarLivro")]
-    public async Task AddLivro(livro livro)
+    public async Task<ActionResult<livro>> AddLivro(livro livro)
     {
-        await _livroService.AdicionarLivro(livro);
+        return await _livroService.AdicionarLivro(livro);
     }
 
     [HttpPatch]
-    [Route("atualizarLivro/{isbn}")]
-    public async Task UpdateLivro(livro isbn)
+    [Route("atualizarLivro")]
+    public async Task<ActionResult<livro>> UpdateLivro(livro livro)
     {
-        await _livroService.AtualizarLivro(isbn);
+        return await _livroService.AtualizarLivro(livro);
     }
 
     [HttpDelete]
     [Route("apagarLivro/{isbn}")]
-    public async Task DeleteLivro(string isbn)
+    public async Task<ActionResult<livro>> DeleteLivro(string isbn)
     {
-        await _livroService.RemoverLivro(isbn);
+        return await _livroService.RemoverLivro(isbn);
     }
 }
