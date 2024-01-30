@@ -33,18 +33,26 @@ public class AutorController : ControllerBase
     public async Task<ActionResult<autor>> GetAutor(int idAutor)
     {
         return await _autorService.ObterAutorPorId(idAutor);
-
     }
 
     [HttpPost]
     [Route("criarAutor")]
-    public async Task PostAutor(autor autor) => await _autorService.AdicionarAutor(autor);
+    public async Task<ActionResult<autor>> AddAutor(autor autor)
+    {
+        return await _autorService.AdicionarAutor(autor);
+    }
 
     [HttpPatch]
-    [Route("atualizarAutor/{idAutor}")]
-    public async Task UpdateAutor(autor idAutor) => await _autorService.AtualizarAutor(idAutor);
+    [Route("atualizarAutor")]
+    public async Task<ActionResult<autor>> UpdateAutor(autor autor)
+    {
+        return await _autorService.AtualizarAutor(autor);
+    }
 
     [HttpDelete]
     [Route("apagarAutor/{idAutor}")]
-    public async Task DeleteAutor(int idAutor) => await _autorService.RemoverAutor(idAutor);
+    public async Task<ActionResult<autor>> DeleteAutor(int idAutor)
+    {
+        return await _autorService.RemoverAutor(idAutor);
+    }
 }
