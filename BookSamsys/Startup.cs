@@ -1,23 +1,9 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using BookSamsys.Repository;
 using BookSamsys.Services;
 using BookSamsys.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
 //using BookSamsys.Mappers;
-using Newtonsoft.Json;
-using System.Text.Json;
-using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
 
 
 
@@ -36,15 +22,16 @@ namespace BookSamsys
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddScoped<LivroService>();
-            services.AddScoped<AutorService>();
+            services.AddScoped<ILivroService, LivroService>();
+            services.AddScoped<IAutorService, AutorService>();
+            services.AddScoped<ILivroRepository, LivroRepository>();
+            services.AddScoped<IAutorRepository, AutorRepository>();
+
+
 
             //services.AddAutoMapper(typeof(MappingProfile));
 
-            //services.AddControllers().AddNewtonsoftJson(options =>
-            //{
-            //    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-            //});
+            services.AddControllers().AddJsonOptions(options => { options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; });
 
             services.AddDbContext<AppDBContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("DevConnection")));
@@ -67,9 +54,8 @@ namespace BookSamsys
 
             app.UseHttpsRedirection();
 
-            //app.UseAuthorization();
-
             app.UseRouting();
+            app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
