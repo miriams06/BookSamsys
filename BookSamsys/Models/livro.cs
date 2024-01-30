@@ -6,10 +6,13 @@ namespace BookSamsys.Models
     public class livro
     {
         [Key]
-        public string isbn { get; set; }
-        public string nome { get; set; }
-        public int idAutor { get; set; }
-        public decimal preco { get; set; }
-        public autor autor { get; set; }
+        public string ISBN { get; set; }
+        public string Nome { get; set; }
+        public int IdAutor { get; set; }
+        public decimal Preco { get; set; }
+
+
+       
     }
+    
 }

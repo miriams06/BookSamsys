@@ -17,12 +17,12 @@ namespace BookSamsys.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<livro>()
-                .HasKey(l => l.isbn);
+                .HasKey(l => l.ISBN);
 
-            modelBuilder.Entity<livro>()
-                .HasOne(l => l.autor)
-                .WithMany(a => a.Livros)
-                .HasForeignKey(l => l.idAutor);
+            //modelBuilder.Entity<livro>()
+            //    .HasOne(l => l.autor)
+            //    .WithMany(a => a.Livros)
+            //    .HasForeignKey(l => l.idAutor);
 
             base.OnModelCreating(modelBuilder);
         }
