@@ -9,9 +9,9 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Azure.Messaging;
 
 namespace BookSamsys.Services;
-public class AutorService : ControllerBase, IAutorService
+public class AutorService : ControllerBase,  IAutorService
 {
-    private readonly IAutorRepository _autorRepository;
+    private readonly AppDBContext _context; IAutorRepository _autorRepository;
 
     public AutorService(IAutorRepository autorRepository)
     {
@@ -20,54 +20,72 @@ public class AutorService : ControllerBase, IAutorService
 
     public async Task<IEnumerable<autor>> ObterTodosAutores()
     {
-        var autor = await _autorRepository.ObterTodos();
+        var autores = await _autorRepository.ObterTodos();
 
-        if (autor == null)
+        if (autores == null)
         {
             NotFound();
         }
 
-        return autor;
+        return autores;
     }
 
-    public async Task ObterAutorPorId(int id)
+    public async Task<ActionResult<autor>> ObterAutorPorId(int id)
+    {
+        var autor = await _autorRepository.ObterPorId(id);
+
+        if (autor == null)
+        {
+            throw new InvalidOperationException($"Autor com id {id} não encontrado.");
+        }
+
+        return Ok(autor);
+    }
+
+    public async Task<ActionResult<autor>> AdicionarAutor(autor addAutor)
+    {
+        var autorTask = _autorRepository.ObterPorId(addAutor.idAutor);
+        await autorTask;
+
+        var autor = autorTask.Result;
+
+        if (autor != null)
+        {
+            return BadRequest(new { message = "O autor já existe." });
+        }
+
+        await _autorRepository.AdicionarAutor(addAutor);
+
+        return Ok("Autor inserido com sucesso.");
+
+    }
+
+    public async Task<ActionResult<autor>> AtualizarAutor(autor editarAutor)
+    {
+        var autorObtido = await _autorRepository.ObterPorId(editarAutor.idAutor);
+
+        if (autorObtido == null)
+        {
+            return NotFound($"Autor com o id {editarAutor.idAutor} não encontrado.");
+        }
+
+        autorObtido.nome = editarAutor.nome;
+
+        await _autorRepository.AtualizarAutor(editarAutor);
+        return Ok("Autor atualizado com sucesso.");
+    }
+
+    public async Task<ActionResult<autor>> RemoverAutor(int id)
     {
         var autor = _autorRepository.ObterPorId(id);
 
         if (autor == null)
         {
-            NotFound();
+            return NotFound();
         }
 
-        Ok(autor);
-    }
+        await _autorRepository.RemoverAutor(id);
 
-    public async Task AdicionarAutor(autor autor)
-    {
-        await _autorRepository.AdicionarAutor(autor);
-    }
-
-    public async Task AtualizarAutor(autor id)
-    {
-        var autor = _autorRepository.AtualizarAutor(id);
-
-        if (autor == null)
-        {
-            NotFound();
-        }
-
-        Ok(autor);
-    }
-
-    public async Task RemoverAutor(int id)
-    {
-        var autor = _autorRepository.RemoverAutor(id);
-
-        if (autor == null)
-        {
-            NotFound();
-        }
-
-        Ok(autor);
+        return Ok("Autor removido com sucesso.");
     }
 }
