@@ -10,19 +10,32 @@ using Azure.Messaging;
 using System.Web;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Threading.Tasks;
+using BookSamsys.Models.DTOs;
 
 namespace BookSamsys.Services;
 
 public class LivroService : ControllerBase, ILivroService
 {
     private readonly AppDBContext _context; ILivroRepository _livroRepository;
+    private readonly IMapper _mapper;
     private List<livro> livros;
-    public LivroService(ILivroRepository livroRepository)
+    public LivroService(IMapper mapper, ILivroRepository livroRepository)
     {
+        _mapper = mapper;
         _livroRepository = livroRepository;
         livros = new List<livro>();
     }
 
+    public async Task<livroDTO> ObterLivroDTO(livro livro)
+    {
+        await _livroRepository.ObterPorIsbn(livro.ISBN);
+        return _mapper.Map<livroDTO>(livro);
+    }
+
+    public async Task<livro> ObterLivro(livroDTO livroDTO)
+    {
+        return _mapper.Map<livro>(livroDTO);
+    }
     public async Task<IEnumerable<livro>> ObterTodosLivros()
     {
         var livros = await _livroRepository.ObterTodos();
@@ -36,7 +49,7 @@ public class LivroService : ControllerBase, ILivroService
     }
 
 
-    public async Task<ActionResult<livro>> ObterLivroPorIsbn(string isbn)
+    public async Task<ActionResult<livroDTO>> ObterLivroPorIsbn(string isbn)
     {
         var livro = await _livroRepository.ObterPorIsbn(isbn);
 
@@ -76,7 +89,7 @@ public class LivroService : ControllerBase, ILivroService
     //            livrosOrdenados = livros.OrderBy(l => l.isbn);
     //            break;
     //    }
-        
+
     //    var livrosPaginados = livrosOrdenados
     //        .Skip((paginaAtual - 1) * itensPorPagina)
     //        .Take(itensPorPagina);
@@ -86,38 +99,30 @@ public class LivroService : ControllerBase, ILivroService
 
     public async Task<ActionResult<livro>> AdicionarLivro(livro addLivro)
     {
-        var livroTask = await _livroRepository.ObterPorIsbn(addLivro.ISBN);
-        //return livroTask;
-
-
-        //var livro = livroTask.Result;
-
-        if (addLivro != null && addLivro.ISBN == livroTask.ISBN)
-        {
-            return BadRequest("O ISBN já está em uso por outro livro.");
-        }
-
-
         if (addLivro.ISBN.Length != 13 || addLivro.Preco < 0 || addLivro == null)
         {
             return BadRequest("Ocorreu um erro ao adicionar as informações.");
         }
 
-        var livroAdd = await _livroRepository.AdicionarLivro(addLivro);
-        //return livroAdd;
+        var livroTask = await _livroRepository.ObterPorIsbn(addLivro.ISBN);
 
-        return Ok("Livro inserido com sucesso.");
+        if (livroTask != null && livroTask.ISBN == addLivro.ISBN)
+        {
+            return BadRequest($"O ISBN {addLivro.ISBN} já existe.");
+        }
 
+        if (livroTask == null)
+        {
+            await _livroRepository.AdicionarLivro(addLivro);
+            return Ok("Livro inserido com sucesso.");
+        }
+
+        return BadRequest("Erro desconhecido ao adicionar o livro.");
     }
 
 
     public async Task<ActionResult<livro>> AtualizarLivro(livro editarLivro)
     {
-        //if (editarLivro != null && editarLivro.ISBN != livroObtido.ISBN)
-        //{
-        //    return BadRequest("O ISBN não existe.");
-        //}
-
         if (editarLivro.ISBN.Length != 13 || editarLivro.Preco < 0 || editarLivro == null)
         {
             return BadRequest("Ocorreu um erro ao adicionar as informações.");
@@ -130,11 +135,6 @@ public class LivroService : ControllerBase, ILivroService
             return NotFound($"Livro com o ISBN {editarLivro.ISBN} não encontrado.");
         }
 
-        //livroObtido.livroUpdate(editarLivro.Nome, editarLivro.Preco);
-
-        livroObtido.Nome = editarLivro.Nome;
-        livroObtido.Preco = editarLivro.Preco;
-
         try
         {
             await _livroRepository.AtualizarLivro(editarLivro);
@@ -144,12 +144,6 @@ public class LivroService : ControllerBase, ILivroService
         {
             return StatusCode(500, "Erro interno ao atualizar o livro.");
         }
-
-
-        //livroObtido.livroUpdate(livroObtido.ISBN, livroObtido.Nome, livroObtido.IdAutor, livroObtido.Preco);
-        //await _livroRepository.AtualizarLivro(livroObtido);
-
-        //return Ok("Livro atualizado com sucesso.");
 
     }
 

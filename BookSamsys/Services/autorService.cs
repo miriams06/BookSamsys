@@ -45,18 +45,19 @@ public class AutorService : ControllerBase,  IAutorService
     public async Task<ActionResult<autor>> AdicionarAutor(autor addAutor)
     {
         var autorTask = _autorRepository.ObterPorId(addAutor.idAutor);
-        await autorTask;
 
-        var autor = autorTask.Result;
-
-        if (autor != null)
+        if (autorTask != null && autorTask.Id == addAutor.idAutor)
         {
-            return BadRequest(new { message = "O autor já existe." });
+            return BadRequest($"O autor com id {addAutor.idAutor} já existe.");
         }
 
-        await _autorRepository.AdicionarAutor(addAutor);
+        if (autorTask == null)
+        {
+            await _autorRepository.AdicionarAutor(addAutor);
+            return Ok("Autor inserido com sucesso.");
+        }
 
-        return Ok("Autor inserido com sucesso.");
+        return BadRequest($"Erro desconhecido ao adicionar o autor.");
 
     }
 
@@ -68,8 +69,6 @@ public class AutorService : ControllerBase,  IAutorService
         {
             return NotFound($"Autor com o id {editarAutor.idAutor} não encontrado.");
         }
-
-        autorObtido.nome = editarAutor.nome;
 
         await _autorRepository.AtualizarAutor(editarAutor);
         return Ok("Autor atualizado com sucesso.");
