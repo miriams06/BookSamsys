@@ -6,8 +6,8 @@ namespace BookSamsys.Repository
         {
             Task<IEnumerable<autor>> ObterTodos();
             Task<autor> ObterPorId(int id);
-            Task AdicionarAutor(autor autor);
-            Task AtualizarAutor(autor autor);
-            Task RemoverAutor(int id);
+            Task<autor> AdicionarAutor(autor autor);
+            Task<autor> AtualizarAutor(autor autor);
+            Task<autor> RemoverAutor(int id);
         }
 }

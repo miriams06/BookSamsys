@@ -34,9 +34,15 @@ public class LivroRepository : ILivroRepository
         return livro;
     }
 
-    public async Task<livro> AtualizarLivro(livro livro)    
+    //public async Task<livro> AtualizarLivro(livro livro)
+    //{
+    //    await _context.SaveChangesAsync();
+    //    return livro;
+    //}
+    public async Task<livro> AtualizarLivro(livro livro)
     {
-        //await _context.Livros.AddAsync(livro);
+        var livroExiste = await _context.Livros.FindAsync(livro.ISBN);
+        _context.Entry(livroExiste).CurrentValues.SetValues(livro);
         await _context.SaveChangesAsync();
         return livro;
     }
