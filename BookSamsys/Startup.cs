@@ -2,10 +2,8 @@
 using BookSamsys.Repository;
 using BookSamsys.Services;
 using BookSamsys.Models;
-//using BookSamsys.Mappers;
 using System.Text.Json.Serialization;
-
-
+using AutoMapper;
 
 namespace BookSamsys
 {
@@ -27,9 +25,7 @@ namespace BookSamsys
             services.AddScoped<ILivroRepository, LivroRepository>();
             services.AddScoped<IAutorRepository, AutorRepository>();
 
-
-
-            //services.AddAutoMapper(typeof(MappingProfile));
+            services.AddAutoMapper(typeof(Startup));
 
             services.AddControllers().AddJsonOptions(options => { options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; });
 
