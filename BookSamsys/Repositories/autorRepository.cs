@@ -34,7 +34,7 @@ public class AutorRepository : IAutorRepository
     public async Task<autor> AtualizarAutor(autor autor)
     {
         //var autorExiste = await _context.Autores.FindAsync(autor.idAutor);
-        //_context.Entry(autorExiste).CurrentValues.SetValues(autor);
+        //_context.Entry(autorExiste).CurrentValues.SetValues(autor); 
         await _context.SaveChangesAsync();
         return autor;
     }
