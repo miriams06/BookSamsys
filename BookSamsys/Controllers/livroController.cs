@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BookSamsys.Models;
+using BookSamsys.Models.DTOs;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,7 +24,7 @@ public class LivroController : ControllerBase
 
     [HttpGet]
     [Route("livros")]
-    public async Task<IEnumerable<livro>> GetLivros()
+    public async Task<MessagingHelper<List<livroDTO>>> GetLivros()
     {
         return await _livroService.ObterTodosLivros();
     }
@@ -31,7 +32,7 @@ public class LivroController : ControllerBase
 
     [HttpGet]
     [Route("livro/{isbn}")]
-    public async Task<ActionResult<livro>>GetLivro(string isbn)
+    public async Task<MessagingHelper<livroDTO>> GetLivro(string isbn)
     {
        return await _livroService.ObterLivroPorIsbn(isbn);
     }
@@ -45,21 +46,21 @@ public class LivroController : ControllerBase
 
     [HttpPost]
     [Route("criarLivro")]
-    public async Task<ActionResult<livro>> AddLivro(livro livro)
+    public async Task<MessagingHelper<livroDTO>> AddLivro(livroDTO livroDto)
     {
-        return await _livroService.AdicionarLivro(livro);
+        return await _livroService.AdicionarLivro(livroDto);
     }
 
     [HttpPatch]
     [Route("atualizarLivro")]
-    public async Task<ActionResult<livro>> UpdateLivro(livro livro)
+    public async Task<MessagingHelper<livroDTO>> UpdateLivro(livroDTO livroDto)
     {
-        return await _livroService.AtualizarLivro(livro);
+        return await _livroService.AtualizarLivro(livroDto);
     }
 
     [HttpDelete]
     [Route("apagarLivro/{isbn}")]
-    public async Task<ActionResult<livro>> DeleteLivro(string isbn)
+    public async Task<MessagingHelper<livroDTO>> DeleteLivro(string isbn)
     {
         return await _livroService.RemoverLivro(isbn);
     }
