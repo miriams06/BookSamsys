@@ -24,17 +24,17 @@ public class AutorRepository : IAutorRepository
         return await _context.Autores.FindAsync(id);
     }
 
-    public async Task<autor> AdicionarAutor(autor autor)
+    public async Task<autor> AdicionarAutor(autor nome)
     {
-        _context.Autores.Add(autor);
+        await _context.Autores.AddAsync(nome);
         await _context.SaveChangesAsync();
-        return autor;
+        return nome;
     }
 
     public async Task<autor> AtualizarAutor(autor autor)
     {
-        var autorExiste = await _context.Livros.FindAsync(autor.idAutor);
-        _context.Entry(autorExiste).CurrentValues.SetValues(autor);
+        //var autorExiste = await _context.Autores.FindAsync(autor.idAutor);
+        //_context.Entry(autorExiste).CurrentValues.SetValues(autor);
         await _context.SaveChangesAsync();
         return autor;
     }

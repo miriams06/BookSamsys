@@ -1,13 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
-
-namespace BookSamsys.Models
+using Swashbuckle.AspNetCore.Annotations;
+namespace BookSamsys.Models.DTOs
 {
-    public class autor
+    public class autorDTO
     {
-        [Key]
+        [SwaggerSchema(ReadOnly = true)]
         public int idAutor { get; set; }
 
-        [Required]
         public string nome { get; set; }
 
     }

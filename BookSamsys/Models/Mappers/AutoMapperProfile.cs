@@ -7,5 +7,7 @@ public class AutoMapperProfile : Profile
     {
         CreateMap<livro, livroDTO>();
         CreateMap<livroDTO, livro>();
+        CreateMap<autor, autorDTO>();
+        CreateMap<autorDTO, autor>();
     }
 }

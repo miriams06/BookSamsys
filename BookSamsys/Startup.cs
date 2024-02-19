@@ -4,7 +4,6 @@ using BookSamsys.Services;
 using BookSamsys.Models;
 using System.Text.Json.Serialization;
 using AutoMapper;
-
 namespace BookSamsys
 {
     public class Startup
