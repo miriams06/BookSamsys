@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 using NuGet.LibraryModel;
+using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Azure.Messaging;
@@ -16,150 +17,225 @@ namespace BookSamsys.Services;
 
 public class LivroService : ControllerBase, ILivroService
 {
-    private readonly AppDBContext _context; ILivroRepository _livroRepository;
+    private readonly ILivroRepository _livroRepository; IAutorRepository _autorRepository;
     private readonly IMapper _mapper;
     private List<livro> livros;
-    public LivroService(IMapper mapper, ILivroRepository livroRepository)
+    public LivroService(IMapper mapper, ILivroRepository livroRepository, IAutorRepository autorRepository)
     {
         _mapper = mapper;
         _livroRepository = livroRepository;
         livros = new List<livro>();
-    }
-
-    public async Task<livroDTO> ObterLivroDTO(livro livro)
-    {
-        await _livroRepository.ObterPorIsbn(livro.ISBN);
-        return _mapper.Map<livroDTO>(livro);
-    }
-
-    public async Task<livro> ObterLivro(livroDTO livroDTO)
-    {
-        return _mapper.Map<livro>(livroDTO);
-    }
-    public async Task<IEnumerable<livro>> ObterTodosLivros()
-    {
-        var livros = await _livroRepository.ObterTodos();
-
-        if (livros == null || !livros.Any())
-        {
-            return null;
-        }
-
-        return livros;
+        _autorRepository = autorRepository;
     }
 
 
-    public async Task<ActionResult<livroDTO>> ObterLivroPorIsbn(string isbn)
+    public async Task<MessagingHelper<List<livroDTO>>> ObterTodosLivros()
     {
-        var livro = await _livroRepository.ObterPorIsbn(isbn);
-
-        if (isbn.Length != 13)
-        {
-            return BadRequest();
-        }
-
-        if (livro == null)
-        {
-            throw new InvalidOperationException($"Livro com ISBN {isbn} não encontrado.");
-        }
-       
-
-        return Ok(livro);
-
-    }
-
-    //public async Task<ActionResult<livro>> ListarLivros(string ordenacao, int paginaAtual, int itensPorPagina)
-    //{
-    //    IEnumerable<livro> livrosOrdenados;
-    //    switch (ordenacao.ToLower())
-    //    {
-    //        case "isbn":
-    //            livrosOrdenados = livros.OrderBy(l => l.isbn);
-    //            break;
-    //        case "nome":
-    //            livrosOrdenados = livros.OrderBy(l => l.nome);
-    //            break;
-    //        case "autor":
-    //            livrosOrdenados = livros.OrderBy(l => l.idAutor);
-    //            break;
-    //        case "preco":
-    //            livrosOrdenados = livros.OrderBy(l => l.preco);
-    //            break;
-    //        default:
-    //            livrosOrdenados = livros.OrderBy(l => l.isbn);
-    //            break;
-    //    }
-
-    //    var livrosPaginados = livrosOrdenados
-    //        .Skip((paginaAtual - 1) * itensPorPagina)
-    //        .Take(itensPorPagina);
-
-    //    Ok(livrosPaginados);
-    //}
-
-    public async Task<ActionResult<livro>> AdicionarLivro(livro addLivro)
-    {
-        if (addLivro.ISBN.Length != 13 || addLivro.Preco < 0 || addLivro == null)
-        {
-            return BadRequest("Ocorreu um erro ao adicionar as informações.");
-        }
-
-        var livroTask = await _livroRepository.ObterPorIsbn(addLivro.ISBN);
-
-        if (livroTask != null && livroTask.ISBN == addLivro.ISBN)
-        {
-            return BadRequest($"O ISBN {addLivro.ISBN} já existe.");
-        }
-
-        if (livroTask == null)
-        {
-            await _livroRepository.AdicionarLivro(addLivro);
-            return Ok("Livro inserido com sucesso.");
-        }
-
-        return BadRequest("Erro desconhecido ao adicionar o livro.");
-    }
-
-
-    public async Task<ActionResult<livro>> AtualizarLivro(livro editarLivro)
-    {
-        if (editarLivro.ISBN.Length != 13 || editarLivro.Preco < 0 || editarLivro == null)
-        {
-            return BadRequest("Ocorreu um erro ao adicionar as informações.");
-        }
-
-        var livroObtido = await _livroRepository.ObterPorIsbn(editarLivro.ISBN);
-
-        if (livroObtido == null)
-        {
-            return NotFound($"Livro com o ISBN {editarLivro.ISBN} não encontrado.");
-        }
+        var resposta = new MessagingHelper<List<livroDTO>>();
+        string mensagemErro = "Ocorreu um erro ao obter os livros.";
 
         try
         {
-            await _livroRepository.AtualizarLivro(editarLivro);
-            return Ok("Livro atualizado com sucesso.");
+            var livros = await _livroRepository.ObterTodos();
+
+            if (livros == null)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = mensagemErro;
+                return resposta;
+            }
+
+            var livrosDTO = _mapper.Map<List<livroDTO>>(livros);
+
+            resposta.Obj = livrosDTO;
+            resposta.Sucesso = true;
+            return resposta;
         }
         catch (Exception ex)
         {
-            return StatusCode(500, "Erro interno ao atualizar o livro.");
+            resposta.Sucesso = false;
+            resposta.Mensagem = mensagemErro + " Detalhes: " + ex.Message;
+            return resposta;
         }
-
     }
 
-    public async Task<ActionResult<livro>> RemoverLivro(string isbn)
+
+    public async Task<MessagingHelper<livroDTO>> ObterLivroPorIsbn(string isbn)
     {
-        var livro = _livroRepository.ObterPorIsbn(isbn);
+        var resposta = new MessagingHelper<livroDTO>();
+        string mensagemErro = "Erro ao obter livro por ISBN.";
+
+        try
+        {
+            if (isbn.Length != 13)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = "O ISBN deve ter 13 caracteres.";
+                return resposta;
+            }
+
+            var livro = await _livroRepository.ObterPorIsbn(isbn);
+
+            if (livro == null)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = $"Livro com ISBN {isbn} não encontrado.";
+                return resposta;
+            }
+
+            var livroDTO = _mapper.Map<livroDTO>(livro);
+
+            resposta.Obj = livroDTO;
+            resposta.Sucesso = true;
+            return resposta;
+        }
+        catch (Exception ex)
+        {
+            resposta.Sucesso = false;
+            resposta.Mensagem = mensagemErro + " Detalhes: " + ex.Message;
+            return resposta;
+        }
+    }
+
+
+    public async Task<MessagingHelper<livroDTO>> AdicionarLivro(livroDTO livroDto)
+    {
+        var resposta = new MessagingHelper<livroDTO>();
+        string mensagemErro = "Erro ao adicionar o livro.";
+
+        try
+        {
+            if (livroDto == null || livroDto.ISBN.Length != 13 || livroDto.Preco < 0)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = "Ocorreu um erro ao adicionar as informações.";
+                return resposta;
+            }
+
+            var livroExistente = await _livroRepository.ObterPorIsbn(livroDto.ISBN);
+
+            if (livroExistente != null)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = $"O ISBN {livroDto.ISBN} já existe.";
+                return resposta;
+            }
+
+            var autorExistente = await _autorRepository.ObterPorId(livroDto.IdAutor);
+            if (autorExistente == null)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = $"Autor com o ID {livroDto.IdAutor} não encontrado.";
+                return resposta;
+            }
+
+            var livro = _mapper.Map<livro>(livroDto);
+            await _livroRepository.AdicionarLivro(livro);
+
+            resposta.Sucesso = true;
+            resposta.Mensagem = "Livro inserido com sucesso.";
+            resposta.Obj = livroDto;
+            return resposta;
+        }
+        catch (Exception ex)
+        {
+            resposta.Sucesso = false;
+            resposta.Mensagem = mensagemErro + " Detalhes: " + ex.Message;
+            return resposta;
+        }
+    }
+
+    public async Task<MessagingHelper<livroDTO>> AtualizarLivro(livroDTO livroDto)
+    {
+        var resposta = new MessagingHelper<livroDTO>();
+        string mensagemErro = "Erro ao atualizar o livro.";
+
+        try
+        {
+            if (livroDto == null)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = "O objeto livroDTO não pode ser nulo.";
+                return resposta;
+            }
+
+            var livro = _mapper.Map<livro>(livroDto);
+
+            if (livro == null)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = "Ocorreu um erro ao converter o livroDTO para livro.";
+                return resposta;
+            }
+
+            if (livro.ISBN.Length != 13 || livro.Preco < 0)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = "Os dados do livro são inválidos.";
+                return resposta;
+            }
+
+            var livroObtido = await _livroRepository.ObterPorIsbn(livro.ISBN);
+
+            if (livroObtido == null)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = $"Livro com o ISBN {livro.ISBN} não encontrado.";
+                return resposta;
+            }
+
+            var autorExistente = await _autorRepository.ObterPorId(livro.IdAutor);
+
+            if (autorExistente == null)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = $"Autor com o ID {livro.IdAutor} associado ao livro não encontrado.";
+                return resposta;
+            }
+
+            await _livroRepository.AtualizarLivro(livro);
+
+            resposta.Sucesso = true;
+            resposta.Mensagem = "Livro atualizado com sucesso.";
+            resposta.Obj = livroDto;
+            return resposta;
+        }
+        catch (DbUpdateException ex)
+        {
+            resposta.Sucesso = false;
+            resposta.Mensagem = mensagemErro + ex.Message;
+            return resposta;
+        }
+        catch (Exception ex)
+        {
+            resposta.Sucesso = false;
+            resposta.Mensagem = mensagemErro + ex.Message;
+            return resposta;
+        }
+    }
+
+    public async Task<MessagingHelper<livroDTO>> RemoverLivro(string isbn)
+    {
+        var resposta = new MessagingHelper<livroDTO>();
+
+        var livro = await _livroRepository.ObterPorIsbn(isbn);
 
         if (livro == null)
         {
-            return NotFound();
+            resposta.Sucesso = false;
+            resposta.Mensagem = "Livro não encontrado.";
+            return resposta;
         }
 
         await _livroRepository.RemoverLivro(isbn);
 
-        return Ok("Livro removido com sucesso.");
+        var livroDTO = _mapper.Map<livroDTO>(livro);
+        resposta.Sucesso = true;
+        resposta.Mensagem = "Livro removido com sucesso.";
+        resposta.Obj = livroDTO;
 
+        return resposta;
     }
+
 
 }
