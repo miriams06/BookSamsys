@@ -9,6 +9,7 @@ namespace BookSamsys.Repository
         Task<livro> ObterPorIsbn(string isbn);
         Task<livro> AdicionarLivro(livro livro);
         Task<livro> AtualizarLivro(livro livro);
+        Task<livro> AtivarLivro(string isbn);
         Task<livro> RemoverLivro(string isbn);
     }
 }

@@ -14,5 +14,6 @@ public interface ILivroService
     //Task<ActionResult<livro>> ListarLivros(string ordenacao, int paginaAtual, int itensPorPagina);
     Task<MessagingHelper<livroDTO>> AdicionarLivro(livroDTO livroDto);
     Task<MessagingHelper<livroDTO>> AtualizarLivro(livroDTO livroDto);
+    Task<MessagingHelper<livroDTO>> AtivarLivro(string isbn);
     Task<MessagingHelper<livroDTO>> RemoverLivro(string isbn);
 }

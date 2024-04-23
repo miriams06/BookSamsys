@@ -214,6 +214,32 @@ public class LivroService : ControllerBase, ILivroService
         }
     }
 
+    public async Task<MessagingHelper<livroDTO>> AtivarLivro(string isbn)
+    {
+        var resposta = new MessagingHelper<livroDTO>();
+
+        var livro = await _livroRepository.ObterPorIsbn(isbn);
+
+        if (livro == null)
+        {
+            resposta.Sucesso = false;
+            resposta.Mensagem = "Livro não encontrado.";
+            return resposta;
+        }
+
+        livro.Estado = true;
+
+        await _livroRepository.AtivarLivro(isbn);
+
+        var livroDTO = _mapper.Map<livroDTO>(livro);
+        resposta.Sucesso = true;
+        resposta.Mensagem = "Livro ativado com sucesso.";
+        resposta.Obj = livroDTO;
+
+        return resposta;
+    }
+
+
     public async Task<MessagingHelper<livroDTO>> RemoverLivro(string isbn)
     {
         var resposta = new MessagingHelper<livroDTO>();
@@ -227,15 +253,18 @@ public class LivroService : ControllerBase, ILivroService
             return resposta;
         }
 
+        livro.Estado = false;
+
         await _livroRepository.RemoverLivro(isbn);
 
         var livroDTO = _mapper.Map<livroDTO>(livro);
         resposta.Sucesso = true;
-        resposta.Mensagem = "Livro removido com sucesso.";
+        resposta.Mensagem = "Estado do livro alterado para inativo.";
         resposta.Obj = livroDTO;
 
         return resposta;
     }
+
 
 
 }
