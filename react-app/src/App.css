@@ -1,0 +1,51 @@
+.livro-container {
+  width: 100%;
+  max-width: 1200px;
+  padding: 5 10px;
+  margin: 30px auto;
+}
+
+.autor-container {
+  width: 100%;
+  max-width: 1200px;
+  padding: 5 10px;
+  margin: 30px auto;
+}
+
+.livro-container header{
+  display: flex;
+  align-items: center;
+}
+
+/* .livro-container header button{
+  height: 50px;
+  width: 200px;
+  border-radius: 5px;
+  border: 1 px solid #DCDCE6;
+  background: green;
+  margin-left: 10px;
+  transition: border-color 0.5s;
+} */
+
+.livro-container header button:hover{
+  border-color: #510bac;
+}
+
+table, th, td {
+  border: 1px solid black;
+  margin-top: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 20px;
+  text-align: left;
+}
+
+.form-control{
+  margin-left: 10px;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
