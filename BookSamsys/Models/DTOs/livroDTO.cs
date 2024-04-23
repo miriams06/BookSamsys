@@ -6,5 +6,6 @@
             public string Nome { get; set; }
             public int IdAutor { get; set; }
             public decimal Preco { get; set; }
+            public bool Estado { get; set; }
     }
 }
