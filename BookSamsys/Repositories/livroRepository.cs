@@ -47,10 +47,20 @@ public class LivroRepository : ILivroRepository
         return livro;
     }
 
+    public async Task<livro> AtivarLivro(string isbn)
+    {
+        var livro = await _context.Livros.FindAsync(isbn);
+        _context.Entry(livro).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+        return livro;
+    }
+
+
     public async Task<livro> RemoverLivro(string isbn)
     {
         var livro = await _context.Livros.FindAsync(isbn);
-        _context.Livros.Remove(livro);
+        //_context.Livros.Remove(livro);
+        _context.Entry(livro).State = EntityState.Modified;
         await _context.SaveChangesAsync();
         return livro;
     }

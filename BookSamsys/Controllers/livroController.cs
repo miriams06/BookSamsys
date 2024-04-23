@@ -23,7 +23,6 @@ public class LivroController : ControllerBase
 
 
     [HttpGet]
-    [Route("livros")]
     public async Task<MessagingHelper<List<livroDTO>>> GetLivros()
     {
         return await _livroService.ObterTodosLivros();
@@ -31,7 +30,7 @@ public class LivroController : ControllerBase
 
 
     [HttpGet]
-    [Route("livro/{isbn}")]
+    [Route("{isbn}")]
     public async Task<MessagingHelper<livroDTO>> GetLivro(string isbn)
     {
        return await _livroService.ObterLivroPorIsbn(isbn);
@@ -56,6 +55,13 @@ public class LivroController : ControllerBase
     public async Task<MessagingHelper<livroDTO>> UpdateLivro(livroDTO livroDto)
     {
         return await _livroService.AtualizarLivro(livroDto);
+    }
+
+    [HttpPut]
+    [Route("ativarLivro/{isbn}")]
+    public async Task<MessagingHelper<livroDTO>> AtivarLivro(string isbn)
+    {
+        return await _livroService.AtivarLivro(isbn);
     }
 
     [HttpDelete]
