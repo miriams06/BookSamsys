@@ -22,7 +22,6 @@ public class AutorController : ControllerBase
     }
 
     [HttpGet]
-    [Route("autores")]
     public async Task<MessagingHelper<List<autorDTO>>> GetAutores()
     {
         return await _autorService.ObterTodosAutores();
@@ -30,7 +29,7 @@ public class AutorController : ControllerBase
 
 
     [HttpGet]
-    [Route("autores/{idAutor}")]
+    [Route("{idAutor}")]
     public async Task<MessagingHelper<autorDTO>> GetAutor(int idAutor)
     {
         return await _autorService.ObterAutorPorId(idAutor);
@@ -44,10 +43,10 @@ public class AutorController : ControllerBase
     }
 
     [HttpPatch]
-    [Route("atualizarAutor/{id}")]
-    public async Task<MessagingHelper<autorDTO>> UpdateAutor(int id, autorDTO autorDto)
+    [Route("atualizarAutor/{idAutor}")]
+    public async Task<MessagingHelper<autorDTO>> UpdateAutor(int idAutor, autorDTO autorDto)
     {
-        return await _autorService.AtualizarAutor(id, autorDto);
+        return await _autorService.AtualizarAutor(idAutor, autorDto);
     }
 
     [HttpDelete]
